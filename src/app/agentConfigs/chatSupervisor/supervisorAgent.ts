@@ -3,7 +3,6 @@ import { RealtimeItem, tool } from '@openai/agents/realtime';
 
 import {
   exampleAccountInfo,
-  examplePolicyDocs,
   exampleStoreLocations,
 } from './sampleData';
 
@@ -15,10 +14,10 @@ export const supervisorAgentInstructions = `You are an expert customer service s
 - Your message will be read verbatim by the junior agent, so feel free to use it like you would talk directly to the user
   
 ==== Domain-Specific Agent Instructions ====
-You are a helpful customer service agent working for NewTelco, helping a user efficiently fulfill their request while adhering closely to provided guidelines.
+You are a helpful customer service agent working for ASUS, helping a user efficiently fulfill their request while adhering closely to provided guidelines.
 
 # Instructions
-- Always greet the user at the start of the conversation with "Hi, you've reached NewTelco, how can I help you?"
+- Always greet the user at the start of the conversation with "Hi, you've reached ASUS, how can I help you?"
 - Always call a tool before answering factual questions about the company, its offerings or products, or a user's account. Only use retrieved context and never rely on your own knowledge for any of these questions.
 - Escalate to a human if the user requests.
 - Do not discuss prohibited topics (politics, religion, controversial current events, medical, legal, or financial advice, personal conversations, internal company operations, or criticism of any people or company).
@@ -42,8 +41,8 @@ You are a helpful customer service agent working for NewTelco, helping a user ef
 - "That's not something I'm able to provide information on, but I'm happy to help with any other questions you may have."
 
 ## If you do not have a tool or information to fulfill a request
-- "Sorry, I'm actually not able to do that. Would you like me to transfer you to someone who can help, or help you find your nearest NewTelco store?"
-- "I'm not able to assist with that request. Would you like to speak with a human representative, or would you like help finding your nearest NewTelco store?"
+- "Sorry, I'm actually not able to do that. Would you like me to transfer you to someone who can help, or help you find your nearest ASUS store?"
+- "I'm not able to assist with that request. Would you like to speak with a human representative, or would you like help finding your nearest ASUS store?"
 
 ## Before calling a tool
 - "To help you with that, I'll just need to verify your information."
@@ -88,25 +87,28 @@ Yes we do—up to five lines can share data, and you get a 10% discount for each
 - User: Can I make a payment over the phone right now?
 - Supervisor Assistant:
 # Message
-I'm sorry, but I'm not able to process payments over the phone. Would you like me to connect you with a human representative, or help you find your nearest NewTelco store for further assistance?
+I'm sorry, but I'm not able to process payments over the phone. Would you like me to connect you with a human representative, or help you find your nearest ASUS store for further assistance?
 `;
 
 export const supervisorAgentTools = [
   {
     type: "function",
-    name: "lookupPolicyDocument",
+    name: "lookupOnWeb",
     description:
-      "Tool to look up internal documents and policies by topic or keyword.",
+      "Use this tool to perform real-time web searches via Serper. Ideal for retrieving up-to-date information not available in internal documentation, such as current events, live product listings, or recent announcements.",
     parameters: {
       type: "object",
       properties: {
-        topic: {
+        query: {
           type: "string",
-          description:
-            "The topic or keyword to search for in company policies or documents.",
+          description: "The search query. Must be concise and specific.",
+        },
+        num: {
+          type: "number",
+          description: "Optional. Number of results to return (1-10). Default 5.",
         },
       },
-      required: ["topic"],
+      required: ["query"],
       additionalProperties: false,
     },
   },
@@ -121,7 +123,7 @@ export const supervisorAgentTools = [
         phone_number: {
           type: "string",
           description:
-            "Formatted as '(xxx) xxx-xxxx'. MUST be provided by the user, never a null or empty string.",
+            "Formatted as '(xxxx) xxx-xxx'. MUST be provided by the user, never a null or empty string.",
         },
       },
       required: ["phone_number"],
@@ -138,7 +140,7 @@ export const supervisorAgentTools = [
       properties: {
         zip_code: {
           type: "string",
-          description: "The customer's 5-digit zip code.",
+          description: "The customer's 3-digit zip code.",
         },
       },
       required: ["zip_code"],
@@ -166,14 +168,29 @@ async function fetchResponsesMessage(body: any) {
   return completion;
 }
 
-function getToolResponse(fName: string) {
+async function getToolResponse(fName: string, args: any) {
   switch (fName) {
     case "getUserAccountInfo":
       return exampleAccountInfo;
-    case "lookupPolicyDocument":
-      return examplePolicyDocs;
     case "findNearestStore":
       return exampleStoreLocations;
+    case "lookupOnWeb": {
+      const { query, num } = args || {};
+      try {
+        const res = await fetch('/api/websearch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, num }),
+        });
+        if (!res.ok) {
+          return { error: 'webSearch_failed' };
+        }
+        const data = await res.json();
+        return data;
+      } catch (e) {
+        return { error: 'webSearch_exception' };
+      }
+    }
     default:
       return { result: true };
   }
@@ -222,7 +239,7 @@ async function handleToolCalls(
     for (const toolCall of functionCalls) {
       const fName = toolCall.name;
       const args = JSON.parse(toolCall.arguments || '{}');
-      const toolRes = getToolResponse(fName);
+      const toolRes = await getToolResponse(fName, args);
 
       // Since we're using a local function, we don't need to add our own breadcrumbs
       if (addBreadcrumb) {
@@ -282,7 +299,7 @@ export const getNextResponseFromSupervisor = tool({
     const filteredLogs = history.filter((log) => log.type === 'message');
 
     const body: any = {
-      model: 'gpt-4.1',
+      model: 'gpt-4o-mini',
       input: [
         {
           type: 'message',
