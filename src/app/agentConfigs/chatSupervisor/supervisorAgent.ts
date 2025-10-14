@@ -59,29 +59,34 @@ You are a helpful customer service agent working for ASUS, helping a user effici
     - For a single source: [NAME](ID)
     - For multiple sources: [NAME](ID), [NAME](ID)
 - Only provide information about this company, its policies, its products, or the customer's account, and only if it is based on information provided in context. Do not answer questions outside this scope.
+- Do NOT include web links, full file paths, or external URLs in citations or anywhere in the message.
 
-# Example (tool call)
-- User: Can you tell me about your family plan options?
-- Supervisor Assistant: lookup_policy_document(topic="family plan options")
-- lookup_policy_document(): [
+- # Example (tool call)
+- User: Taipei weather today?
+- Supervisor Assistant: lookupOnWeb(query="Taipei weather today", num=3)
+- lookupOnWeb(): [
   {
-    id: "ID-010",
-    name: "Family Plan Policy",
-    topic: "family plan options",
-    content:
-      "The family plan allows up to 5 lines per account. All lines share a single data pool. Each additional line after the first receives a 10% discount. All lines must be on the same account.",
+    "title": "Taipei City, Taipei City, Taiwan Weather Forecast",
+    "url": "https://www.accuweather.com/en/tw/taipei-city/315078/weather-forecast/315078",
+    "snippet": "Hourly Weather · 1 PM 97°. rain drop 0% · 2 PM 96°. rain drop 0% · 3 PM 94°. rain drop 0% · 4 PM 91°. rain drop 0% · 5 PM 89°. rain drop 0% · 6 PM 86°. rain ...",
+    "position": 1
   },
   {
-    id: "ID-011",
-    name: "Unlimited Data Policy",
-    topic: "unlimited data",
-    content:
-      "Unlimited data plans provide high-speed data up to 50GB per month. After 50GB, speeds may be reduced during network congestion. All lines on a family plan share the same data pool. Unlimited plans are available for both individual and family accounts.",
+    "title": "Taipei City - Central Weather Administration",
+    "url": "https://www.cwa.gov.tw/V8/E/W/County/County.html?CID=63",
+    "snippet": "Taipei City · Early Morning Mostly clear 26 - 3079 - 86Probability of Precipitation0%Comfortable ~ Hot · Today Mostly clear 26 - 3579 - 95Probability of ...",
+    "position": 2
   },
+  {
+    "title": "Taipei Hourly Weather Forecast",
+    "url": "https://www.wunderground.com/hourly/tw/taipei",
+    "snippet": "Sunshine. High around 95F. Winds E at 10 to 20 mph. Sun. 5:52AM. 5:30PM. Moon. 10:55PM. 12: ...",
+    "position": 3
+  }
 ];
 - Supervisor Assistant:
-# Message
-Yes we do—up to five lines can share data, and you get a 10% discount for each new line [Family Plan Policy](ID-010).
+- # Message
+- Today's Taipei weather is mostly sunny to partly cloudy, daytime temperatures around 26–35°C with a 0% chance of rain. It will feel comfortable to hot and is suitable for outdoor activities.
 
 # Example (Refusal for Unsupported Request)
 - User: Can I make a payment over the phone right now?
@@ -95,7 +100,7 @@ export const supervisorAgentTools = [
     type: "function",
     name: "lookupOnWeb",
     description:
-      "Use this tool to perform real-time web searches via Serper. Ideal for retrieving up-to-date information not available in internal documentation, such as current events, live product listings, or recent announcements.",
+      "Use this tool to perform real-time web searches via Serper. Ideal for retrieving up-to-date information not available in internal documentation, such as stock market, live product listings, or recent news.",
     parameters: {
       type: "object",
       properties: {

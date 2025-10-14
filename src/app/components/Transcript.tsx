@@ -28,6 +28,7 @@ function Transcript({
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isComposing, setIsComposing] = useState(false);
 
   function scrollToBottom() {
     if (transcriptRef.current) {
@@ -216,9 +217,17 @@ function Transcript({
           type="text"
           value={userText}
           onChange={(e) => setUserText(e.target.value)}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && canSend) {
-              onSendMessage();
+            if (e.key === "Enter" && !e.shiftKey) {
+              if (isComposing) {
+                return;
+              }
+              if (canSend) {
+                e.preventDefault();
+                onSendMessage();
+              }
             }
           }}
           className="flex-1 px-4 py-2 focus:outline-none"

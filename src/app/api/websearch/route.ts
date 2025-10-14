@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
 
     const payload = {
       q: query,
-      gl: "tw",
+      gl: 'tw',
+      hl: 'zh-tw',
       num: Math.max(1, Math.min(10, Number(num) || 5)) 
     };
 
