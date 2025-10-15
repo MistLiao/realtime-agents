@@ -1,4 +1,5 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
+import { RECOMMENDED_PROMPT_PREFIX } from '@openai/agents-core/extensions';
 import { lookupOnWebTool } from './tools';
 
 export const rogAgent = new RealtimeAgent({
@@ -8,7 +9,7 @@ export const rogAgent = new RealtimeAgent({
   handoffDescription:
     'Handles ASUS ROG topics (ROG laptops/desktops, ROG Phone, peripherals). Can use web search.',
   tools: [lookupOnWebTool],
-  instructions: `
+  instructions: RECOMMENDED_PROMPT_PREFIX + `
 You are Jane from ASUS ROG. Handle ONLY ASUS ROG products: ROG laptops (Zephyrus/Strix/Flow), ROG Phone, desktops, GPUs, and peripherals. Also Armoury Crate / Aura Sync.
 
 # Language

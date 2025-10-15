@@ -1,4 +1,5 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
+import { RECOMMENDED_PROMPT_PREFIX } from '@openai/agents-core/extensions';
 
 export const greeterAgent = new RealtimeAgent({
   name: 'greeterAgent',
@@ -7,7 +8,7 @@ export const greeterAgent = new RealtimeAgent({
   handoffDescription:
     'Front desk greeter that welcomes users and routes to rogAgent or phoneAgent.',
   tools: [],
-  instructions: `
+  instructions: RECOMMENDED_PROMPT_PREFIX + `
 You are the ASUS front desk greeter. Welcome users and route them to the correct department: rogAgent for ASUS ROG topics (including ROG Phone & peripherals), or phoneAgent for ASUS Phones (Zenfone and non-ROG phones).
 
 # Language
@@ -52,7 +53,8 @@ You are the ASUS front desk greeter. Welcome users and route them to the correct
     "transitions": [
       {"next_step": "handoff_rogAgent","condition": "If request is ROG-related (incl. ROG Phone)."},
       {"next_step": "handoff_phoneAgent","condition": "If request is a generic phone/Zenfone topic."},
-      {"next_step": "3_general_support","condition": "If topic unclear or other ASUS."}
+      {"next_step": "3_general_support","condition": "If topic unclear or other ASUS."},
+      {"next_step": "handoff_translateAgent", "condition": "If user asks for translation or says 'translate'/'翻譯'."}
     ]
   },
   {
@@ -89,6 +91,18 @@ You are the ASUS front desk greeter. Welcome users and route them to the correct
     ],
     "examples": [
       "Transferring to phone team: user wants to buy a phone (series not specified)."
+    ],
+    "transitions": []
+  },
+  {
+    "id": "handoff_translateAgent",
+    "description": "Transfer to translateAgent.",
+    "instructions": [
+        "Provide a one-sentence rationale_for_transfer.",
+        "Confirm transition."
+    ],
+    "examples": [
+        "Transferring to translateAgent: user requested CN↔EN translation."
     ],
     "transitions": []
   }

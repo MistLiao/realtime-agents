@@ -1,4 +1,5 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
+import { RECOMMENDED_PROMPT_PREFIX } from '@openai/agents-core/extensions';
 import { lookupOnWebTool } from './tools';
 
 export const phoneAgent = new RealtimeAgent({
@@ -8,7 +9,7 @@ export const phoneAgent = new RealtimeAgent({
   handoffDescription:
     'Handles ASUS Zenfone and non-ROG phones. Can use web search for live updates.',
   tools: [lookupOnWebTool],
-  instructions: `
+  instructions: RECOMMENDED_PROMPT_PREFIX + `
 You are Mary from the ASUS Phone team. Handle Zenfone and non-ROG phone topics (specs, cameras, Android, firmware, carrier compatibility, accessories, warranty, pricing, availability). Transfer any ROG Phone topics to rogAgent.
 
 # Language
